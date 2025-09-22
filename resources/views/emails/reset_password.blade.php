@@ -5,9 +5,12 @@ Vous avez demandé à réinitialiser votre mot de passe sur **Longrich Platform*
 
 Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :
 
-@component('mail::button', ['url' => url('/reset-password?token='.$token.'&email='.$email)])
+@component('mail::button', [
+    'url' => env('FRONTEND_URL') . '/reset-password?token=' . $token . '&email=' . urlencode($email)
+])
 Réinitialiser le mot de passe
 @endcomponent
+
 
 Si vous n'avez pas demandé ce changement, ignorez cet email.
 

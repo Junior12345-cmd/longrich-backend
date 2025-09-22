@@ -3,8 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ShopController;
-use App\Http\Api\Controllers\ProductController;
-use App\Http\Api\Controllers\Api\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Api\AuthController;
 
 Route::post('auth/register', [AuthController::class,'register']);
 Route::post('auth/login', [AuthController::class,'login']);
@@ -13,7 +13,11 @@ Route::post('auth/reset-password', [AuthController::class,'resetPassword']);
 Route::get('auth/email/verify/{id}/{hash}', [AuthController::class,'verifyEmail'])->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('logout', [AuthController::class,'logout']);
+    Route::post('  ', function (\Illuminate\Http\Request $request){
+        $request->user()->tokens()->delete();
+        return response()->json(['message' => 'Déconnexion réussie']);
+    });
+
     Route::get('profile', [AuthController::class,'profile']);
 
     // Shops

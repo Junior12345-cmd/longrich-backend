@@ -31,7 +31,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Validation errors',
+                'message' => 'Erreurs de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -55,7 +55,7 @@ class AuthController extends Controller
         Mail::to($user->email)->send(new VerifyEmail($user, $verificationUrl));
 
         return response()->json([
-            'message' => 'User registered. Please check your email for verification link.'
+            'message' => 'Utilisateur enregistré. Veuillez consulter votre boîte mail pour obtenir le lien de vérification.'
         ], 201);
     }
 
@@ -68,7 +68,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Validation errors',
+                'message' => 'Erreurs de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -76,11 +76,21 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['message' => 'Email ou mot de passe incorrect'], 401);
         }
 
         if (!$user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email not verified'], 403);
+            // Générer un lien signé pour la vérification
+            $verificationUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(60),
+                ['id' => $user->id, 'hash' => sha1($user->email)]
+            );
+
+            // Envoyer l'email
+            Mail::to($user->email)->send(new VerifyEmail($user, $verificationUrl));
+
+            return response()->json(['message' => 'E-mail non vérifié. Veuillez consulter votre boîte mail pour obtenir le lien de vérification'], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -142,7 +152,7 @@ class AuthController extends Controller
         // Envoyer l'email
         Mail::to($user->email)->send(new ResetPasswordMail($token, $user->email));
 
-        return response()->json(['message'=>'Password reset link sent.']);
+        return response()->json(['message'=>'Lien de réinitialisation du mot de passe envoyé.']);
     }
 
     public function resetPassword(Request $request)
@@ -160,7 +170,7 @@ class AuthController extends Controller
                     ->first();
 
         if (!$record) {
-            return response()->json(['message' => 'Invalid token or email'], 400);
+            return response()->json(['message' => 'Jeton ou e-mail invalide'], 400);
         }
 
         // Modifier directement le mot de passe
@@ -171,7 +181,7 @@ class AuthController extends Controller
         // Supprimer le token après utilisation
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return response()->json(['message' => 'Password reset successful']);
+        return response()->json(['message' => 'Réinitialisation du mot de passe réussie']);
     }
 
 }
