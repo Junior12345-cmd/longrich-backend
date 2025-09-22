@@ -18,10 +18,13 @@ jobs:
       - name: 📂 Deploy to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:
-          server: ${{ secrets.FTP_SERVER }}      # ex: ftp://ftp.mondomaine.com
-          username: ${{ secrets.FTP_USERNAME }}  # ton login FTP
-          password: ${{ secrets.FTP_PASSWORD }}  # ton mot de passe FTP
-          protocol: ftps                         # ftp ou ftps selon ton hébergeur
-          local-dir: ./                          # dossier local à uploader
-          server-dir: /public_html/              # répertoire distant sur cPanel
-          dangerous-clean-slate: false            # supprime les anciens fichiers avant upload (⚠️)
+            server: ${{ secrets.FTP_SERVER }}
+            username: ${{ secrets.FTP_USERNAME }}
+            password: ${{ secrets.FTP_PASSWORD }}
+            protocol: ftps
+            port: 21
+            security: loose
+            server-dir: /public_html/
+            local-dir: ./
+            dangerous-clean-slate: false
+
