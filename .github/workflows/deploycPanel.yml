@@ -24,5 +24,4 @@ jobs:
           protocol: ftps                         # ftp ou ftps selon ton hébergeur
           local-dir: ./                          # dossier local à uploader
           server-dir: /public_html/              # répertoire distant sur cPanel
-          dangerous-clean-slate: true            # supprime les anciens fichiers avant upload (⚠️)
-          concurrency: 1
+          dangerous-clean-slate: false            # supprime les anciens fichiers avant upload (⚠️)
