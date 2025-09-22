@@ -10,29 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Récupérer le code source
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Installer PHP et Composer
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           extensions: mbstring, bcmath, intl, pdo_mysql
 
-      # 3️⃣ Installer les dépendances Laravel
       - name: Install Laravel dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      # 4️⃣ Déployer via FTP/FTPS sur cPanel
       - name: Deploy Laravel to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps        # ou ftp si ftps plante
+          protocol: ftps
           port: 21
           local-dir: ./
           server-dir: /public_html/
