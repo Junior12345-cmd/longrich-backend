@@ -31,7 +31,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./
-          server-dir: /public_html/ftpgitlongrich/
+          server-dir: /home/tabacrecha/api.longrich-tabac-recharge.com/
           dangerous-clean-slate: false
           exclude: |
             **/.git*
