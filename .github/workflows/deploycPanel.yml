@@ -1,21 +1,27 @@
-name: Deploy Laravel to cPanel via CI/CD
- 
+name: 🚀 Deploy Laravel to cPanel
+
 on:
-   push:
-     branches:
-       - main
+  push:
+    branches:
+      - main   # déploie seulement quand on push sur la branche main
+
 jobs:
-  FTP-Deploy-Action:
-    name: FTP-Deploy-Action
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-     -  uses: actions/checkout@v2.1.0
+      # 1. Récupérer le code source
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Déploiement FTP
+      - name: 📂 Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:
-          fetch-depth: 0
-     - name: FTP-Deploy-Action
-       uses: SamKirkland/FTP-Deploy-Action@v3.1.1
-       with: 
-          ftp-server: ${{ secrets.FTP_SERVER }}
-          ftp-username: ${{ secrets.FTP_USERNAME }}
-          ftp-password: ${{ secrets.FTP_PASSWORD }}
-        
+          server: ${{ secrets.FTP_SERVER }}      # ex: ftp://ftp.mondomaine.com
+          username: ${{ secrets.FTP_USERNAME }}  # ton login FTP
+          password: ${{ secrets.FTP_PASSWORD }}  # ton mot de passe FTP
+          protocol: ftps                         # ftp ou ftps selon ton hébergeur
+          local-dir: ./                          # dossier local à uploader
+          server-dir: /public_html/              # répertoire distant sur cPanel
+          dangerous-clean-slate: true            # supprime les anciens fichiers avant upload (⚠️)
