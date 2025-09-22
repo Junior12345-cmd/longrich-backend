@@ -1,4 +1,4 @@
-name: 🚀 Deploy Laravel to cPanel
+name: 🚀 Deploy Laravel to cPanel via ZIP
 
 on:
   push:
@@ -10,10 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 📂 Deploy to cPanel
+      # 2. Setup PHP pour générer vendor/
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, intl, pdo_mysql
+
+      # 3. Installer les dépendances Laravel
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      # 4. Créer un fichier zip du projet (sans .git et node_modules)
+      - name: Zip project
+        run: |
+          zip -r deploy.zip . -x "node_modules/*" ".git/*" ".env"
+
+      # 5. Upload du zip via FTP
+      - name: Upload ZIP to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -21,8 +39,11 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
+          local-dir: ./deploy.zip
           server-dir: /public_html/
-          local-dir: ./
           dangerous-clean-slate: false
-          exclude: |
-            **/node_modules/**
+
+      # 6. Décompresser le zip sur cPanel (via PHP script)
+      # Tu dois avoir un script PHP sur ton serveur qui fait : 
+      #   unzip('deploy.zip', '/public_html/');
+      # Ou le faire via le File Manager de cPanel après upload
