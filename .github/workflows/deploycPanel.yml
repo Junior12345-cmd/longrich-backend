@@ -25,5 +25,4 @@ jobs:
           local-dir: ./
           dangerous-clean-slate: false
           exclude: |
-            **/vendor/**
             **/node_modules/**
