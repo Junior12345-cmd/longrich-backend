@@ -22,11 +22,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Shops
     Route::get('shops', [ShopController::class, 'index']);
-    Route::post('shops', [ShopController::class, 'store']);
+    Route::post('shops/create', [ShopController::class, 'store']);
     Route::get('shops/{id}', [ShopController::class, 'show']);
-    Route::put('shops/{id}', [ShopController::class, 'update']);
-    Route::post('shops/{id}/deactivate', [ShopController::class, 'deactivate']);
+    Route::put('shops/{id}/update', [ShopController::class, 'update']);
+    Route::put('shops/{id}/update-template', [ShopController::class, 'updateTemplate']);
+    Route::post('shops/{id}/desactivate', [ShopController::class, 'deactivate']);
     Route::post('shops/{id}/reactivate', [ShopController::class, 'reactivate']);
+    Route::get('/shops/{slug}', [ShopController::class, 'showPublic']);
 
     // Products
     Route::get('products', [ProductController::class, 'index']);

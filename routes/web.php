@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\ShopController;
 //     return ['Laravel' => app()->version()];
 // });
 
-Route::domain('{shop}.localhost')->group(function () {
-    Route::get('/', [ShopController::class, 'showBySubdomain']);
+Route::domain('shop.{slug}.' . env('FRONTEND_URL'))->group(function () {
+    Route::get('/', [ShopController::class, 'showPublic']);
 });
 
 

@@ -22,14 +22,18 @@ return new class extends Migration
             $table->string('adresse')->nullable();
             $table->string('mail')->nullable();
             $table->string('option')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('category')->nullable();
             $table->string('status')->default('inactive');
-            $table->string('completion_status')->default('incomplete'); // complete/incomplete
+            // $table->string('completion_status')->default('incomplete'); // complete/incomplete
             $table->decimal('solde', 15, 2)->default(0);
             $table->string('title_principal_shop')->nullable();
             $table->text('text_description_shop')->nullable();
+            $table->text('text_bouton_shop')->nullable();
             $table->string('lien_shop')->nullable();
             $table->string('theme')->nullable();
             $table->text('seo_meta')->nullable();
+            $table->text('template')->nullable();
             $table->integer('views_count')->default(0);
             $table->timestamps();
         });

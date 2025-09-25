@@ -10,8 +10,8 @@ class Shop extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id','title','description','logo','banner','adresse','mail',
-        'option','status','solde','title_principal_shop','text_description_shop','lien_shop','theme','seo_meta','views_count'
+        'user_id','title','description','logo','banner','adresse','mail', 'phone','category','paymentOnDelivery','salesTax','template',
+        'option','status','solde','title_principal_shop','text_description_shop','text_bouton_shop','lien_shop','theme','seo_meta','views_count'
     ];
 
     public function user()
@@ -24,25 +24,25 @@ class Shop extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function isComplete(): bool
-    {
-        $importantFields = [
-            'title_principal_shop',
-            'text_description_shop',
-            'title',
-            'description',
-            'logo',
-            'mail',
-        ];
+    // public function isComplete(): bool
+    // {
+    //     $importantFields = [
+    //         'title_principal_shop',
+    //         'text_description_shop',
+    //         'title',
+    //         'description',
+    //         'logo',
+    //         'mail',
+    //     ];
 
-        foreach ($importantFields as $field) {
-            if (empty($this->$field)) {
-                return false;
-            }
-        }
+    //     foreach ($importantFields as $field) {
+    //         if (empty($this->$field)) {
+    //             return false;
+    //         }
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 
     // protected static function booted()
     // {
