@@ -12,22 +12,10 @@ use Illuminate\Support\Facades\Validator;
 class ShopController extends Controller
 {
 
-    public function showBySubdomain($shop)
-    {
-        $shop = Shop::where('title', $shop)
-                    ->firstOrFail();
-
-        return response()->json([
-            'message' => "Bienvenue dans la boutique $shop->title",
-            'shop' => $shop
-        ]);
-    }
-
-
     // Lister toutes les boutiques
     public function index()
     {
-        $shops = Shop::with('user')->latest()->get();
+        $shops = Shop::with('user')->where('user_id', auth()->id())->latest()->get();
         return response()->json($shops);
     }
 
@@ -59,7 +47,7 @@ class ShopController extends Controller
 
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('logos', 'public'); // stocké dans storage/app/public/logos
-            $logo_url = url('storage/' . $path); // URL accessible
+            $logo_url = url('storage/' . $path);
         }
 
 
@@ -82,7 +70,7 @@ class ShopController extends Controller
             'logo' => $logo_url ?? null,
             'status' => 'incomplete',
             'solde' => 0,
-            'lien_shop' => "shop." . $slug . env("FRONTEND_URL"),
+            'lien_shop' => $slug,
         ]);
 
         return response()->json($shop, 201);
@@ -91,7 +79,12 @@ class ShopController extends Controller
 
     public function showPublic($slug)
     {
+        //consulter la boutique via son slug
         $shop = Shop::where('lien_shop', $slug)->firstOrFail();
+        if($shop->status !== 'complete'){
+            return response()->json(['message' => 'Cette boutique n\'est pas activée pour le moment.'], 403);
+        }
+
         return response()->json($shop);
     }
 
@@ -183,7 +176,7 @@ class ShopController extends Controller
 
         // Vérifier que le statut est 'complete' avant de désactiver
         if ($shop->status !== 'complete') {
-            return response()->json(['message' => 'Shop cannot be deactivated'], 400);
+            return response()->json(['message' => 'Votre boutique ne peut pas être deésactivée'], 400);
         }
 
         $shop->status = 'desactived';
