@@ -13,7 +13,8 @@ Route::get('auth/email/verify/{id}/{hash}', [AuthController::class,'verifyEmail'
 Route::get('/shops/{slug}', [ShopController::class, 'showPublic']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('auth/logout', [AuthController::class,'logout']);
+    Route::post('auth/verify', [AuthController::class,'logout']);
+    Route::post('auth/logout', [AuthController::class,'verifyToken']);
 
     Route::post('  ', function (\Illuminate\Http\Request $request){
         $request->user()->tokens()->delete();
@@ -46,8 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Commandes
     Route::prefix('commandes')->group(function () {
-        Route::get('/', [CommandeController::class, 'index']);
-        Route::post('/create', [CommandeController::class, 'store']);
+        Route::get('/{shopId}', [CommandeController::class, 'index']);
+        Route::post('/create', [CommandeController::class, 'store_commande_produit']);
         Route::get('show/{id}', [CommandeController::class, 'show']);
         Route::post('update/{id}', [CommandeController::class, 'update']);
         Route::post('delete/{id}', [CommandeController::class, 'destroy']);

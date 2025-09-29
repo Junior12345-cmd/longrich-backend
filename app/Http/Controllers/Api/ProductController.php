@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Shop;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,57 +24,70 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
+            'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'category_id' => 'required|exists:categories,id',
-            'shop_id' => 'required|exists:shops,id',
-            // 'shop_id' => [
-            //     'required',
-            //     Rule::exists('shops', 'id')->where(function ($query) {
-            //         $query->where('status', 'completed');
-            //     })
-            // ],
-            // 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            // 'images' => 'nullable|array',
-            // 'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'price'       => 'required|numeric|min:0',
+            'quantity'    => 'required|integer|min:0',
+            'category'    => 'required|string|max:255',
+            'shop_id'     => 'required|exists:shops,id',
+            'images'      => 'required|array|min:1',
+            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
-    
+
         $data = $validator->validated();
         $data['user_id'] = auth()->id();
-    
-        // Upload image principale
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+
+        // Vérifier si la boutique appartient à l'utilisateur connecté
+        $shop = Shop::find($data['shop_id']);
+        if (!$shop || $shop->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'êtes pas autorisé à ajouter des produits dans cette boutique'
+            ], 403);
         }
-    
-        // Upload images secondaires
+
+        $images = [];
         if ($request->hasFile('images')) {
-            $images = [];
             foreach ($request->file('images') as $file) {
-                $images[] = $file->store('products', 'public');
+                // stocker dans storage/app/public/products
+                $path = $file->store('products', 'public');
+                $images[] = url('storage/' . $path); // ✅ URL publique
             }
-            $data['images'] = json_encode($images); 
         }
-        
-        
+
+        // La première image devient l’image principale
+        $data['image'] = $images[0] ?? null;
+
+        // Sauvegarder la galerie
+        if (!empty($images)) {
+            $data['images'] = json_encode($images);
+        }
+
         $product = Product::create($data);
-    
-        return response()->json($product, 201);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produit ajouté avec succès',
+            'product' => $product
+        ], 201);
     }
 
     // Afficher un produit
     public function show($id)
     {
         $product = Product::with('shop','category')->find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Produit non trouvé'], 404);
+        }
+        
         return response()->json($product);
     }
 
@@ -123,7 +137,6 @@ class ProductController extends Controller
             'data' => $newProduct
         ], 201);
     }
-
 
     // Mettre à jour un produit
     public function update(Request $request, $id)

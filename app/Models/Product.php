@@ -29,12 +29,12 @@ class Product extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
-    }
+        return $this->belongsTo(Category::class, 'category');
+    }   
 
     public function commandes()
     {
-        return $this->hasMany(Commande::class, 'product_id');
+        return $this->morphMany(Commande::class, 'orderable');
     }
 
 }

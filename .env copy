@@ -5,13 +5,20 @@ APP_KEY=base64:VOC/GPDl/cOX4qUcNcqsxy7MSPB3Y4/xz4SDyd44e0A=
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
-
+# Database
 DB_CONNECTION=mysql
-DB_HOST=198.38.90.90
-DB_PORT=3306
-DB_DATABASE=tabacrecha_longrich_db
-DB_USERNAME=tabacrecha_jr
-DB_PASSWORD=juqcaH-sijxop-8nefza
+DB_HOST=127.0.0.1
+DB_PORT=8889
+DB_DATABASE=longrich
+DB_USERNAME=root
+DB_PASSWORD=root
+
+# DB_CONNECTION=mysql
+# DB_HOST=198.38.90.90
+# DB_PORT=3306
+# DB_DATABASE=tabacrecha_longrich_db
+# DB_USERNAME=tabacrecha_jr
+# DB_PASSWORD=juqcaH-sijxop-8nefza
 
 
 # Cache & Sessions

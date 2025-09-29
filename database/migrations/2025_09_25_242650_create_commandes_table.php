@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->string('customer')->nullable();
             $table->morphs('orderable');             
             $table->integer('amount');
             $table->string('reference')->unique();
-            $table->string('transaction_id')->nullable();   // from payment gateway
+            $table->string('transaction_id')->nullable();   
             $table->string('status')->default('pending'); // pending, completed, cancelled
             $table->timestamps();
         });    

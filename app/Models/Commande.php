@@ -10,16 +10,21 @@ class Commande extends Model
     use HasFactory;
 
     protected $fillable = [
-        'reference', 'customer_id', 'product_id', 'amount', 'status', 'transaction_id'
+        'reference', 'customer', 'orderable_type', 'orderable_id', 'amount', 'status', 'transaction_id'
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-
-    public function customer()
+    
+    public function orderable()
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->morphTo();
     }
+
+    // public function customer()
+    // {
+    //     return $this->belongsTo(User::class, 'customer_id');
+    // }
 }

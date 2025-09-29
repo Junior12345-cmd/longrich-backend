@@ -131,6 +131,15 @@ class AuthController extends Controller
         return response()->json(['message'=>'Email verified successfully']);
     }
 
+    public function verifyToken(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
+            'message' => 'Token valide',
+            'status' => 200,
+        ]);
+    }
+
     public function forgotPassword(Request $request)
     {
         $request->validate(['email'=>'required|email']);

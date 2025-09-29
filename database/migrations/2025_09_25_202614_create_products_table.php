@@ -15,14 +15,14 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('user_id')->nullable();
-            $table->string('shop_id')->nullable();
+            $table->string('shop_id')->constrained('shops')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('quantity');
-            $table->string('category')->nullable();
-            $table->string('image')->nullable();
-            $table->string('images')->nullable();
+            $table->string('category')->constrained('categories')->onDelete('cascade');
+            $table->text('image')->nullable();
+            $table->text('images')->nullable();
             $table->string('pays_disponibilite')->nullable();
             $table->integer('sales')->default(0);
             $table->decimal('rating', 3, 2)->default(0);
