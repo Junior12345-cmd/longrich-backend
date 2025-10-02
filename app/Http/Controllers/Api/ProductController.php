@@ -13,10 +13,13 @@ use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     // Lister tous les produits
-    public function index()
+    public function index($id)
     {
         // $products = Product::with('shop')->where('user_id', auth()->id())->latest()->get();
-        $products = Product::with('shop','category')->where('user_id', auth()->id())->latest()->get();
+        $products = Product::with('shop','category')
+        ->where('user_id', auth()->id())
+        ->where('shop_id', $id)
+        ->latest()->get();
         return response()->json($products);
     }
 

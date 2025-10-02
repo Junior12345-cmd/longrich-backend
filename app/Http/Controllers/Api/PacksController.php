@@ -22,20 +22,25 @@ class PacksController extends Controller
     // Créer un pack
     public function store(Request $request)
     {
+        // Créer le validateur
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'country_id' => 'required|exists:countries,id',
-            'prix' => 'required|numeric',
-            'features' => 'nullable|array',
+            'title'      => 'required|string|max:255',
+            'description'=> 'required|string',
+            'price'      => 'required|integer',
+            'features'   => 'nullable|array',
+            'status'     => 'nullable|string|in:pending,completed,cancelled',
         ]);
 
+        // Vérifier si la validation échoue
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Création du pack
         $pack = Packs::create($validator->validated());
 
+        // Retourner la réponse JSON
         return response()->json($pack, 201);
     }
 
@@ -64,7 +69,7 @@ class PacksController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'country_id' => 'sometimes|required|exists:countries,id',
-            'prix' => 'sometimes|required|numeric',
+            'price' => 'sometimes|required|numeric',
             'features' => 'nullable|array',
             'status' => 'string',
         ]);
@@ -76,6 +81,24 @@ class PacksController extends Controller
         $pack->update($validator->validated());
 
         return response()->json($pack);
+    }
+
+    public function changeStatus($id)
+    {
+        $pack = Packs::find($id);
+
+        if (!$pack) {
+            return response()->json(['message' => 'Pack introuvable'], 404);
+        }
+
+        // Basculer le statut
+        $pack->status = $pack->status === 'actived' ? 'inactive' : 'actived';
+        $pack->save();
+
+        return response()->json([
+            'message' => 'Statut du pack mis à jour',
+            'status' => $pack->status
+        ]);
     }
 
     // Supprimer un pack
@@ -91,4 +114,6 @@ class PacksController extends Controller
 
         return response()->json(['message' => 'Pack supprimé avec succès']);
     }
+
+
 }

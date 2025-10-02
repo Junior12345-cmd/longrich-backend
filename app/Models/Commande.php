@@ -13,6 +13,10 @@ class Commande extends Model
         'reference', 'customer', 'orderable_type', 'orderable_id', 'amount', 'status', 'transaction_id'
     ];
 
+    protected $casts = [
+        'customer' => 'array', // ou 'json'
+    ];
+
     public function product()
     {
         return $this->belongsTo(Product::class);

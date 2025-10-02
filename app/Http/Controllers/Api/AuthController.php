@@ -93,7 +93,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'E-mail non vérifié. Veuillez consulter votre boîte mail pour obtenir le lien de vérification'], 403);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', [], now()->addHour())->plainTextToken;
 
         return response()->json([
             'user' => $user,

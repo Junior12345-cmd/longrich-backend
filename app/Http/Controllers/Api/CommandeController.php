@@ -14,13 +14,39 @@ class CommandeController extends Controller
     // Liste toutes les commandes
     public function index($shopId)
     {
-        // Récupérer toutes les commandes pour des produits
         $commandes = Commande::where('orderable_type', "App\Models\Product")
-        ->with('orderable')
-        ->get();
+            ->whereHas('orderable', function ($query) use ($shopId) {
+                $query->where('shop_id', $shopId);
+            })
+            ->with('orderable')
+            ->get();
 
         return response()->json($commandes);
     }
+
+
+    public function updateStatus($id, Request $request)
+    {
+        $order = Commande::find($id);
+
+        if (!$order) {
+            return response()->json(['message' => 'Commande introuvable'], 404);
+        }
+
+        // Valider le statut
+        $request->validate([
+            'status' => 'required|in:pending,completed,cancelled',
+        ]);
+
+        $order->status = $request->status;
+        $order->save();
+
+        return response()->json([
+            'message' => 'Statut mis à jour avec succès',
+            'order' => $order
+        ]);
+    }
+
     
     public function store_commande_produit(Request $request)
     {

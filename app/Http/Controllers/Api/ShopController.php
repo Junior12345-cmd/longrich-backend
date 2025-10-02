@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Shop;
+use App\Models\Commande;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -80,7 +81,8 @@ class ShopController extends Controller
     public function showPublic($slug)
     {
         //consulter la boutique via son slug
-        $shop = Shop::where('lien_shop', $slug)->firstOrFail();
+        $shop = Shop::where('lien_shop', $slug)->with('products')->firstOrFail();
+
         if($shop->status !== 'complete'){
             return response()->json(['message' => 'Cette boutique n\'est pas activée pour le moment.'], 403);
         }
@@ -93,9 +95,77 @@ class ShopController extends Controller
     // Afficher une boutique
     public function show($id)
     {
-        $shop = Shop::findOrFail($id);
-        return response()->json($shop);
+         // Récupérer la boutique ou renvoyer 404
+         $shop = Shop::with('products')->findOrFail($id);
+
+         // Statistiques dynamiques
+         $stats = [
+             [
+                 'title' => 'Visiteurs ce mois',
+                 'value' => $shop->visitors_count ?? 0,
+                //  'change' => '+12%', 
+                 'icon' => 'Eye',
+                 'color' => 'text-primary'
+             ],
+             [
+                 'title' => 'Commandes',
+                 'value' => $shop->orders_count ?? 0,
+                //  'change' => '+8%',
+                 'icon' => 'ShoppingCart',
+                 'color' => 'text-secondary'
+             ],
+             [
+                 'title' => 'Chiffre d\'affaires',
+                 'value' => $shop->revenue ?? 0,
+                //  'change' => '+15%',
+                 'icon' => 'TrendingUp',
+                 'color' => 'text-accent'
+             ],
+             [
+                 'title' => 'Produits actifs',
+                 'value' => $shop->products()->count(),
+                //  'change' => '+3%',
+                 'icon' => 'Package',
+                 'color' => 'text-success'
+             ],
+         ];
+ 
+            // Commandes récentes
+            $recentOrders = Commande::whereHas('orderable', function ($q) use ($id) {
+                $q->where('shop_id', $id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($order) {
+                // Si "customer" est une colonne JSON, on la décode
+            $customer = is_string($order->customer) ? json_decode($order->customer, true) : $order->customer;
+    
+            return [
+                'id'        => $order->id,
+                'reference' => $order->reference,
+                'product'   => [
+                    'id'    => $order->orderable->id ?? null,
+                    'title' => $order->orderable->title ?? null,
+                ],
+                'amount'    => $order->amount,
+                'status'    => $order->status,
+                'customer'  => [
+                    'name'  => $customer['name'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                    'city'  => $customer['city'] ?? null,
+                ]
+            ];
+        });
+    
+    
+         return response()->json([
+             'shop' => $shop,
+             'stats' => $stats,
+             'recentOrders' => $recentOrders
+         ]);
     }
+
 
     // Mettre à jour une boutique
     public function update(Request $request, $id)

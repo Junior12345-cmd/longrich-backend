@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('country_id')->constrained('countries')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
-            $table->integer('prix');
+            $table->integer('price');
             $table->text('features');
-            $table->string('status')->default('pending'); // pending, completed, cancelled
+            $table->string('status')->default('actived'); // desactived, actived
             $table->timestamps();
         });
     }

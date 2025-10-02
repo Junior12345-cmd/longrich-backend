@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{AuthController,ShopController,ProductController,CommandeController,CategoryController,ChapitreController,FormationController};
+use App\Http\Controllers\Api\{AuthController,ShopController,ProductController,CommandeController,CategoryController,ChapitreController,FormationController,PacksController,CountryController};
 
 
 Route::post('auth/register', [AuthController::class,'register']);
@@ -12,9 +12,21 @@ Route::post('auth/reset-password', [AuthController::class,'resetPassword']);
 Route::get('auth/email/verify/{id}/{hash}', [AuthController::class,'verifyEmail'])->name('verification.verify');
 Route::get('/shops/{slug}', [ShopController::class, 'showPublic']);
 
+
+//COUNTRY
+Route::prefix('countries')->group(function () {
+    Route::get('/', [CountryController::class, 'index']);
+});
+
+ //Packs
+ Route::prefix('packs')->group(function () {
+    Route::get('/', [PacksController::class, 'index']);
+    Route::get('show/{id}', [PacksController::class, 'show']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('auth/verify', [AuthController::class,'logout']);
-    Route::post('auth/logout', [AuthController::class,'verifyToken']);
+    Route::get('auth/verify', [AuthController::class,'verifyToken']);
+    Route::post('auth/logout', [AuthController::class,'logout']);
 
     Route::post('  ', function (\Illuminate\Http\Request $request){
         $request->user()->tokens()->delete();
@@ -26,14 +38,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shops
     Route::get('shops', [ShopController::class, 'index']);
     Route::post('shops/create', [ShopController::class, 'store']);
-    Route::get('shops/{id}', [ShopController::class, 'show']);
+    Route::get('shops/{id}/show', [ShopController::class, 'show']);
     Route::put('shops/{id}/update', [ShopController::class, 'update']);
     Route::put('shops/{id}/update-template', [ShopController::class, 'updateTemplate']);
     Route::post('shops/{id}/desactivate', [ShopController::class, 'deactivate']);
     Route::post('shops/{id}/reactivate', [ShopController::class, 'reactivate']);
 
     // Products
-    Route::get('products', [ProductController::class, 'index']);
+    Route::get('products/{shopId}', [ProductController::class, 'index']);
     Route::post('products/create', [ProductController::class, 'store']);
     Route::get('products/show/{id}', [ProductController::class, 'show']);
     Route::post('products/update/{id}', [ProductController::class, 'update']);
@@ -50,15 +62,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{shopId}', [CommandeController::class, 'index']);
         Route::post('/create', [CommandeController::class, 'store_commande_produit']);
         Route::get('show/{id}', [CommandeController::class, 'show']);
+        Route::post('/{id}/status', [CommandeController::class, 'updateStatus']);
         Route::post('update/{id}', [CommandeController::class, 'update']);
         Route::post('delete/{id}', [CommandeController::class, 'destroy']);
     });
 
     //Packs
     Route::prefix('packs')->group(function () {
-        Route::get('/', [PacksController::class, 'index']);
-        Route::post('create', [PacksController::class, 'store']);
+        Route::post('/create', [PacksController::class, 'store']);
         Route::get('show/{id}', [PacksController::class, 'show']);
+        Route::post('change-status/{id}', [PacksController::class, 'changeStatus']);
         Route::post('update/{id}', [PacksController::class, 'update']);
         Route::post('delete/{id}', [PacksController::class, 'destroy']);
     });
@@ -66,7 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Chapitres
     Route::prefix('chapitres')->group(function () {
         Route::get('/', [ChapitreController::class, 'index']);
-        Route::post('create/', [ChapitreController::class, 'store']);
+        Route::post('create', [ChapitreController::class, 'store']);
         Route::get('show/{id}', [ChapitreController::class, 'show']);
         Route::post('update/{id}', [ChapitreController::class, 'update']);
         Route::post('delete/{id}', [ChapitreController::class, 'destroy']);
@@ -80,4 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [FormationController::class, 'update']);
         Route::post('delete/{id}', [FormationController::class, 'destroy']);
     });
+
+    
 });

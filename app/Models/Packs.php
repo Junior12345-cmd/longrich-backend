@@ -10,7 +10,7 @@ class Packs extends Model
         'title',
         'description',
         'country_id',
-        'prix',
+        'price',
         'features',
         'status',
     ];
