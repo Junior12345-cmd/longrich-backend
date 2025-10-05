@@ -14,6 +14,13 @@ return [
     |
     */
 
+    'moneroo' => [
+        'secret' => env('MONEROO_SECRET_KEY'),
+        'public' => env('MONEROO_PUBLIC_KEY'),
+        'base_url' => env('MONEROO_BASE_URL', 'https://api.moneroo.io/v1'),
+    ],
+
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

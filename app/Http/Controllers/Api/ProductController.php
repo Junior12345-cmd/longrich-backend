@@ -23,6 +23,33 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
+    // Controller: ProductController.php
+    public function search(Request $request)
+    {
+        $query = $request->query('q', ''); // Match frontend's 'q' parameter
+
+        // If no search term is provided, return empty array
+        if (empty($query)) {
+            \Log::info('No search term provided, returning empty array.', ['q' => $query]);
+            return response()->json([]);
+        }
+
+        $products = Product::query()
+            ->when($query, function ($q) use ($query) {
+                $q->where('title', 'LIKE', "%{$query}%")
+                  ->orWhere('description', 'LIKE', "%{$query}%");
+            })
+            ->latest()
+            ->get();
+
+        \Log::info('Products searched:', [
+            'q' => $query,
+            'count' => $products->count(),
+        ]);
+
+        return response()->json($products);
+    }
+
     // Créer un produit
     public function store(Request $request)
     {
@@ -57,13 +84,20 @@ class ProductController extends Controller
         }
 
         $images = [];
+
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                // stocker dans storage/app/public/products
-                $path = $file->store('products', 'public');
-                $images[] = url('storage/' . $path); // ✅ URL publique
+                // Générer un nom unique pour éviter les collisions
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                // Déplacer directement dans public/storage/products
+                $file->move(public_path('storage/products'), $filename);
+
+                // Stocker l'URL publique
+                $images[] = url('storage/products/' . $filename);
             }
         }
+
 
         // La première image devient l’image principale
         $data['image'] = $images[0] ?? null;
@@ -163,7 +197,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric',
             'qte' => 'sometimes|required|integer',
-            'category_id' => 'sometimes|required|exists:categories,id',
+            'category' => 'sometimes|required',
+            // 'category_id' => 'sometimes|required|exists:categories,id',
         ]);
 
         if ($validator->fails()) {

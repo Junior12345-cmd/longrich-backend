@@ -12,11 +12,34 @@ class PacksController extends Controller
     // Lister tous les packs
     public function index()
     {
-        $packs = Packs::with('country')->get();
+        $packs = Packs::with('country')->latest()->get();
         return response()->json([   
             "packs"=>$packs,
             "total"=>count($packs)
         ]);
+        // $packs = Pack::with('country')->latest()->get()->map(function($pack) {
+        //     return [
+        //         'id' => $pack->id,
+        //         'name' => $pack->title,
+        //         'price' => number_format($pack->price, 0, ',', ' ') . ' FCFA',
+        //         'features' => json_decode($pack->features, true),
+        //         'country' => $pack->country->title
+        //     ];
+        // });
+    
+        return response()->json($packs);
+    }
+
+    public function indexSearch(Request $request)
+    {
+        $countryId = $request->query('country_id');
+        $query = Packs::where('status', 'actived');
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
+        $packs = $query->get();
+        // \Log::info('Packs fetched:', ['country_id' => $countryId, 'packs' => $packs]);
+        return response()->json($packs);
     }
 
     // Créer un pack

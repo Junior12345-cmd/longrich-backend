@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\{Shop,Formation};
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{AuthController,ShopController,ProductController,CommandeController,CategoryController,ChapitreController,FormationController,PacksController,CountryController};
+use App\Http\Controllers\Api\{AuthController,ShopController,ProductController,CommandeController,CategoryController,ChapitreController,FormationController,PacksController,CountryController,PaiementController};
 
 
 Route::post('auth/register', [AuthController::class,'register']);
@@ -21,8 +23,13 @@ Route::prefix('countries')->group(function () {
  //Packs
  Route::prefix('packs')->group(function () {
     Route::get('/', [PacksController::class, 'index']);
+    Route::get('/search', [PacksController::class, 'indexSearch']);
     Route::get('show/{id}', [PacksController::class, 'show']);
 });
+
+Route::get('products/search/', [ProductController::class, 'search']);
+Route::get('products/show/{id}', [ProductController::class, 'show']);
+Route::get('/stockists/search', [AuthController::class, 'search']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/verify', [AuthController::class,'verifyToken']);
@@ -34,6 +41,48 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('profile', [AuthController::class,'profile']);
+    Route::get('stats', function () {
+        $stats = [
+            [
+                'label' => 'Membres actifs',
+                'value' => number_format(User::where('status', 'active')->count(), 0, ',', ','),
+                'icon' => 'Users',
+                'color' => 'text-primary'
+            ],
+            [
+                'label' => 'Boutiques',
+                'value' => number_format(Shop::count(), 0, ',', ','),
+                'icon' => 'Store',
+                'color' => 'text-secondary'
+            ],
+            [
+                'label' => 'Formations',
+                'value' => number_format(Formation::count(), 0, ',', ','),
+                'icon' => 'GraduationCap',
+                'color' => 'text-accent'
+            ],
+            [
+                'label' => 'Lives cette semaine',
+                'value' => '24',
+                'icon' => 'Video',
+                'color' => 'text-success'
+            ]
+            // [
+            //     'label' => 'Lives cette semaine',
+            //     'value' => number_format(LiveEvent::where('date', '>=', now()->startOfWeek())
+            //         ->where('date', '<=', now()->endOfWeek())
+            //         ->count(), 0, ',', ','),
+            //     'icon' => 'Video',
+            //     'color' => 'text-success'
+            // ]
+        ];
+
+        \Log::info('Stats fetched:', ['count' => count($stats)]);
+
+        return response()->json($stats);
+    });
+
+
 
     // Shops
     Route::get('shops', [ShopController::class, 'index']);
@@ -47,8 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products
     Route::get('products/{shopId}', [ProductController::class, 'index']);
     Route::post('products/create', [ProductController::class, 'store']);
-    Route::get('products/show/{id}', [ProductController::class, 'show']);
-    Route::post('products/update/{id}', [ProductController::class, 'update']);
+    Route::post('products/{id}/update', [ProductController::class, 'update']);
     Route::post('products/delete/{id}', [ProductController::class, 'destroy']);
     Route::post('products/import/{id}', [ProductController::class, 'import']);
 
@@ -93,6 +141,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [FormationController::class, 'update']);
         Route::post('delete/{id}', [FormationController::class, 'destroy']);
     });
+
+    // routes/api.php
+    Route::post('/fedapay/create-transaction', [PaiementController::class, 'createTransaction']);
 
     
 });

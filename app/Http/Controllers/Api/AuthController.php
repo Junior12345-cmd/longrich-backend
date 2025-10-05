@@ -193,4 +193,47 @@ class AuthController extends Controller
         return response()->json(['message' => 'Réinitialisation du mot de passe réussie']);
     }
 
+
+
+    public function search(Request $request)
+    {
+        //Recherche de stockiste
+        $query = $request->query('q', '');
+        $country = $request->query('country', '');
+
+        // If no filters provided, return empty array
+        if (empty($query) && empty($country)) {
+            \Log::info('No stockist filters provided, returning empty array.', [
+                'q' => $query,
+                'country' => $country,
+            ]);
+            return response()->json([]);
+        }
+
+        $stockists = User::query()
+        ->when($query, function ($q) use ($query) {
+            $q->where(function ($subQuery) use ($query) {
+                $subQuery->where('lastname', 'LIKE', "%{$query}%")
+                    ->orWhere('firstname', 'LIKE', "%{$query}%")
+                    ->orWhere('phone', 'LIKE', "%{$query}%");
+                    // ->orWhereHas('country', fn($cq) => $cq->where('name', 'LIKE', "%{$query}%"));
+            });
+        })
+        ->when($country, function ($q) use ($country) {
+            $q->where('country_id', $country);
+        })
+        ->with('country')
+        ->latest()
+        ->get();
+
+
+        \Log::info('Stockists searched:', [
+            'q' => $query,
+            'country' => $country,
+            'count' => $stockists->count(),
+        ]);
+
+        return response()->json($stockists);
+    }
+
 }

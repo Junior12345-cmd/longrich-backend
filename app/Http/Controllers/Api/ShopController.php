@@ -6,8 +6,10 @@ use App\Models\Shop;
 use App\Models\Commande;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\ShopCreatedMail;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class ShopController extends Controller
@@ -20,9 +22,41 @@ class ShopController extends Controller
         return response()->json($shops);
     }
 
+
     // Créer une boutique
     public function store(Request $request)
     {
+        // Messages personnalisés
+        $messages = [
+            'title.required' => 'Le nom de la boutique est obligatoire.',
+            'title.string' => 'Le nom de la boutique doit être une chaîne de caractères.',
+            'title.max' => 'Le nom de la boutique ne peut pas dépasser 255 caractères.',
+
+            'description.string' => 'La description doit être une chaîne de caractères.',
+            'description.max' => 'La description ne peut pas dépasser 1000 caractères.',
+
+            'address.required' => 'L’adresse est obligatoire.',
+            'address.string' => 'L’adresse doit être une chaîne de caractères.',
+            'address.max' => 'L’adresse ne peut pas dépasser 500 caractères.',
+
+            'email.required' => 'L’email est obligatoire.',
+            'email.email' => 'L’email doit être une adresse email valide.',
+            'email.max' => 'L’email ne peut pas dépasser 255 caractères.',
+
+            'phone.required' => 'Le numéro de téléphone est obligatoire.',
+            'phone.regex' => 'Le numéro de téléphone doit contenir entre 8 et 15 chiffres.',
+
+            'category.required' => 'La catégorie est obligatoire.',
+            'category.in' => 'La catégorie sélectionnée n’est pas valide.',
+
+            'paymentOnDelivery.required' => 'Vous devez préciser si le paiement à la livraison est activé.',
+            'salesTax.required' => 'Vous devez préciser si la TVA est activée.',
+
+            'template.max' => 'Le nom du template ne peut pas dépasser 255 caractères.',
+            'logo.image' => 'Le logo doit être une image.',
+            'logo.max' => 'Le logo ne peut pas dépasser 2 Mo.',
+        ];
+
         // Validation des données
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -36,7 +70,7 @@ class ShopController extends Controller
             // 'isActive' => 'required|boolean',
             'template' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048', 
-        ]);
+        ], $messages);
 
         // Vérifier si la validation échoue
         if ($validator->fails()) {
@@ -47,9 +81,14 @@ class ShopController extends Controller
         }
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('logos', 'public'); // stocké dans storage/app/public/logos
-            $logo_url = url('storage/' . $path);
-        }
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            
+            // Déplace directement dans public/storage/logos
+            $file->move(public_path('storage/logos'), $filename);
+        
+            $logo_url = url('storage/logos/' . $filename);
+        }        
 
 
         // Générer un slug à partir du title
@@ -73,6 +112,9 @@ class ShopController extends Controller
             'solde' => 0,
             'lien_shop' => $slug,
         ]);
+
+        // Envoi du mail
+        Mail::to(auth()->user()->email)->send(new ShopCreatedMail($shop));
 
         return response()->json($shop, 201);
     }
@@ -253,7 +295,7 @@ class ShopController extends Controller
         $shop->update();
 
         return response()->json([
-            'message' => 'Shop has been deactivated',
+            'message' => 'La boutique a été désactivée',
             'shop' => $shop
         ]);
     }
@@ -261,24 +303,25 @@ class ShopController extends Controller
     public function reactivate($id)
     {
         $shop = Shop::findOrFail($id);
-
+    
         if ($shop->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['message' => 'Non autorisé'], 403);
         }
-
-        // Vérifier que le statut est 'desactived' avant de réactiver
-        if ($shop->status !== 'desactived') {
-            return response()->json(['message' => 'Shop cannot be reactivated'], 400);
+    
+        // Vérifier que le statut est 'desactived' ou 'incomplete'
+        if (!in_array($shop->status, ['desactived', 'incomplete'])) {
+            return response()->json(['message' => 'La boutique ne peut pas être réactivée'], 400);
         }
-
+    
         $shop->status = 'complete';
         $shop->update();
-
+    
         return response()->json([
-            'message' => 'Shop has been reactivated',
+            'message' => 'La boutique a été réactivée',
             'shop' => $shop
         ]);
     }
+    
 
 }
 

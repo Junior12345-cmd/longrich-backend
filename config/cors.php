@@ -22,7 +22,10 @@ return [
     'allowed_origins' => [
         env('FRONTEND_URL', 
         'http://localhost:3000'),
+        'http://localhost:8080',
         'https://darkturquoise-rhinoceros-749906.hostingersite.com',
+        'https://gerant.ttshop-diprissonne.com',
+        'https://longrich-hub.vercel.app'
     ],
 
     'allowed_origins_patterns' => [],
