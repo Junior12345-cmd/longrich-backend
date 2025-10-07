@@ -4,23 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; 
 
 class Commande extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'reference', 'customer', 'orderable_type', 'orderable_id', 'amount', 'status', 'transaction_id'
+        'reference', 'customer', 'orderable_type', 'orderable_id', 'amount', 'status', 'transaction_id', 'quantity', 'product_id', 'transaction', 'amount_with_taxe'
     ];
 
     protected $casts = [
-        'customer' => 'array', // ou 'json'
+        'customer' => 'array',
+        'transaction' => 'array',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'orderable_id');
     }
+    
     
     public function orderable()
     {

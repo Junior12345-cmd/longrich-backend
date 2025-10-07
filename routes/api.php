@@ -1,11 +1,16 @@
 <?php
 
 use App\Models\User;
+use FedaPay\FedaPay;
+use GuzzleHttp\Client;
+use FedaPay\Transaction;
 use Illuminate\Http\Request;
-use App\Models\{Shop,Formation};
 use Illuminate\Support\Facades\Route;
+use App\Models\{Shop,Formation,Commande};
 use App\Http\Controllers\Api\{AuthController,ShopController,ProductController,CommandeController,CategoryController,ChapitreController,FormationController,PacksController,CountryController,PaiementController};
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CommandeStatusMail;
 
 Route::post('auth/register', [AuthController::class,'register']);
 Route::post('auth/login', [AuthController::class,'login']);
@@ -30,6 +35,138 @@ Route::prefix('countries')->group(function () {
 Route::get('products/search/', [ProductController::class, 'search']);
 Route::get('products/show/{id}', [ProductController::class, 'show']);
 Route::get('/stockists/search', [AuthController::class, 'search']);
+
+Route::post('/commandes/create', [CommandeController::class, 'store_commande_produit']);
+
+// Route::post('/verify-fedapay-transaction', function (Request $request) {
+//     $transactionId = $request->input('transaction_id');
+//     $commandeId = $request->input('commande_id');
+
+//     $existTransactionId = Commande::where('transaction_id', $transactionId)->first();
+
+//     if ($existTransactionId) {
+//         return response()->json([
+//             'status' => 'error',
+//             'message' => "Cette transaction existe déjà."
+//         ], 409);
+//     }
+
+//     try {
+//         FedaPay::setApiKey(env('FEDAPAY_SECRET_KEY'));
+//         FedaPay::setEnvironment(env('FEDAPAY_ENV', 'sandbox'));
+
+//         $transaction = Transaction::retrieve($transactionId);
+//         $status = $transaction->status;
+
+//         $commande = Commande::find($commandeId);
+//         if ($commande) {
+//             $commande->status = match ($status) {
+//                 'approved' => 'approved',
+//                 'declined' => 'canceled',
+//                 default => 'pending',
+//             };
+//             $commande->transaction_id = $transactionId;
+//             $commande->save();
+//         }
+
+//         return response()->json([
+//             'status' => 'success',
+//             'transaction_status' => $status,
+//             'commande_status' => $commande->status ?? 'not_found'
+//         ]);
+
+//     } catch (\Exception $e) {
+//         Log::error('Erreur FedaPay: ' . $e->getMessage());
+//         return response()->json([
+//             'status' => 'error',
+//             'message' => $e->getMessage()
+//         ], 500);
+//     }
+// });
+
+Route::post('/verify-fedapay-transaction', function (Request $request) {
+    $transactionId = $request->input('transaction_id');
+    $commandeId = $request->input('commande_id');
+
+    // 🔹 Vérifie d'abord si la transaction a déjà été enregistrée
+    $existTransactionId = Commande::where('transaction_id', $transactionId)->first();
+    if ($existTransactionId) {
+        return response()->json([
+            'status' => 'errorTraitement',
+            'message' => "Cette transaction existe déjà."
+        ], 211);
+    }
+
+    try {
+        // 🔹 Configuration FedaPay
+        FedaPay::setApiKey(env('FEDAPAY_SECRET_KEY'));
+        FedaPay::setEnvironment(env('FEDAPAY_ENV', 'sandbox'));
+
+        // 🔹 Récupération de la transaction
+        $transaction = Transaction::retrieve($transactionId);
+        $status = $transaction->status;
+
+        // 🔹 Mise à jour de la commande
+        $commande = Commande::find($commandeId);
+        if ($commande) {
+            $commande->status = match ($status) {
+                'approved' => 'approved',
+                'declined' => 'canceled',
+                default => 'pending',
+            };
+            $commande->transaction_id = $transactionId;
+            $montant = $commande->amount;
+            $commande->amount_with_taxe = round($montant * 1.07, 2); 
+            $commande->transaction = json_encode($transaction);
+            $commande->save();
+            
+            // 🔔 Envoi des emails
+            try {
+              
+                $commande = Commande::with('product.shop')->find($commandeId);
+
+                $customer = json_decode($commande->customer, true); 
+            
+                // ✅ Envoi au client
+                $shopEmail = $commande->product->shop->mail ?? null;
+                if ($shopEmail) {
+                    Mail::to($shopEmail)->send(new CommandeStatusMail($commande, $commande->product->shop, true)); // admin = true
+                }
+                
+                $clientEmail = $customer['email'] ?? null;
+                if ($clientEmail) {
+                    Mail::to($clientEmail)->send(new CommandeStatusMail($commande, $commande->product->shop, false)); // admin = false
+                }
+                
+
+            } catch (\Exception $mailErr) {
+                Log::error("Erreur envoi email commande #{$commande->id} : " . $mailErr->getMessage());
+                // ne bloque pas le flux principal si l'email échoue
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'transaction_status' => $status,
+                'commande_status' => $commande->status,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Commande non trouvée.',
+        ], 404);
+
+    } catch (\Exception $e) {
+        Log::error('Erreur FedaPay: ' . $e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/verify', [AuthController::class,'verifyToken']);
@@ -108,7 +245,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Commandes
     Route::prefix('commandes')->group(function () {
         Route::get('/{shopId}', [CommandeController::class, 'index']);
-        Route::post('/create', [CommandeController::class, 'store_commande_produit']);
+        // Route::post('/create', [CommandeController::class, 'store_commande_produit']);
         Route::get('show/{id}', [CommandeController::class, 'show']);
         Route::post('/{id}/status', [CommandeController::class, 'updateStatus']);
         Route::post('update/{id}', [CommandeController::class, 'update']);

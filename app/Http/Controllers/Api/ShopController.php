@@ -85,9 +85,15 @@ class ShopController extends Controller
             $filename = time() . '_' . $file->getClientOriginalName();
             
             // Déplace directement dans public/storage/logos
-            $file->move(public_path('storage/logos'), $filename);
+            // $file->move(public_path('storage/logos'), $filename);
         
-            $logo_url = url('storage/logos/' . $filename);
+            // $logo_url = url('storage/logos/' . $filename);
+
+            // Déplacer directement dans public/products
+            $file->move(public_path('logos'), $filename);
+    
+            // Générer l'URL publique
+            $images[] = asset('public/logos/' . $filename);
         }        
 
 
@@ -151,14 +157,14 @@ class ShopController extends Controller
              ],
              [
                  'title' => 'Commandes',
-                 'value' => $shop->orders_count ?? 0,
+                 'value' => $shop->commandes->count() ?? 0,
                 //  'change' => '+8%',
                  'icon' => 'ShoppingCart',
                  'color' => 'text-secondary'
              ],
              [
                  'title' => 'Chiffre d\'affaires',
-                 'value' => $shop->revenue ?? 0,
+                 'value' => $shop->commandes->where('status', 'approved')->sum('amount_with_taxe') ?? 0,
                 //  'change' => '+15%',
                  'icon' => 'TrendingUp',
                  'color' => 'text-accent'

@@ -89,15 +89,14 @@ class ProductController extends Controller
             foreach ($request->file('images') as $file) {
                 // Générer un nom unique pour éviter les collisions
                 $filename = time() . '_' . $file->getClientOriginalName();
-
-                // Déplacer directement dans public/storage/products
-                $file->move(public_path('storage/products'), $filename);
-
-                // Stocker l'URL publique
-                $images[] = url('storage/products/' . $filename);
+        
+                // Déplacer directement dans public/products
+                $file->move(public_path('products'), $filename);
+        
+                // Générer l'URL publique
+                $images[] = asset('public/products/' . $filename);
             }
-        }
-
+        }        
 
         // La première image devient l’image principale
         $data['image'] = $images[0] ?? null;

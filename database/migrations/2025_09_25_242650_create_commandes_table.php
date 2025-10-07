@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
-            $table->string('customer')->nullable();
+            $table->longText('customer')->nullable();
             $table->morphs('orderable');             
             $table->integer('amount');
+            $table->decimal('amount_with_taxe', 10, 2)->nullable();
+            $table->integer('quantity')->default(1);
+            $table->longText('transaction')->nullable();
             $table->string('reference')->unique();
             $table->string('transaction_id')->nullable();   
             $table->string('status')->default('pending'); // pending, completed, cancelled

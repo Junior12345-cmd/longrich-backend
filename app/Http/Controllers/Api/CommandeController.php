@@ -19,7 +19,7 @@ class CommandeController extends Controller
                 $query->where('shop_id', $shopId);
             })
             ->with('orderable')
-            ->get();
+            ->latest()->get();
 
         return response()->json($commandes);
     }
@@ -61,35 +61,60 @@ class CommandeController extends Controller
             'customer.geolocation' => 'nullable|url',
             'product_id' => 'required|exists:products,id',
             'amount' => 'required|numeric',
+            'quantity' => 'required|integer|min:1',
             'transaction_id' => 'nullable|string',
             'status' => 'required|in:pending,completed,canceled',
         ]);
-    
+
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-    
+
         $data = $validator->validated();
-    
+
         // Générer la référence CMD001, CMD002...
-        $lastCommande = Commande::orderBy('id', 'desc')->first();
-        $nextId = $lastCommande ? $lastCommande->id + 1 : 1;
+        $nextId = (Commande::max('id') ?? 0) + 1;
         $reference = 'CMD' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
         
-        $commande = Commande::create([
-            'customer' => json_encode($request->input('customer')),
-            'orderable_id' => $request->product_id,
-            'orderable_type' => 'App\Models\Product',
-            'amount' => $request->amount,
-            'transaction_id' => $request->transaction_id,
-            'status' => $request->status,
-            'reference' => 'CMD' . str_pad((Commande::max('id') ?? 0) + 1, 3, '0', STR_PAD_LEFT),
-        ]);
+        $product = Product::find($data['product_id']);
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Produit introuvable'], 404);
+        }
         
-    
-        return response()->json($commande, 201);
+        $newQuantity = $product->quantity - $data['quantity'];
+        if ($newQuantity < 0) {
+            return response()->json(['success' => false, 'message' => 'Quantité insuffisante en stock'], 400);
+        }
+        
+        $product->update(['quantity' => $newQuantity]);
+        
+
+        // Créer la commande
+        $commande = Commande::create([
+            'customer' => json_encode($data['customer']),
+            'orderable_id' => $data['product_id'],
+            'orderable_type' => 'App\Models\Product',
+            'amount' => $data['amount'],
+            'quantity' => $data['quantity'],
+            'transaction_id' => $data['transaction_id'] ?? null,
+            'status' => $data['status'],
+            'reference' => $reference,
+        ]);
+
+        // Renvoyer une réponse JSON propre
+        return response()->json([
+            'success' => true,
+            'commande' => [
+                'id' => $commande->id,
+                'reference' => $commande->reference,
+                'amount' => $commande->amount,
+                'quantity' => $commande->quantity,
+                'status' => $commande->status,
+                'customer' => json_decode($commande->customer, true),
+            ]
+        ], 201);
     }
-    
+
 
     // Affiche une commande spécifique
     public function show($id)

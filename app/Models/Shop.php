@@ -24,6 +24,19 @@ class Shop extends Model
         return $this->hasMany(Product::class);
     }
 
+    // Relation via les produits pour récupérer toutes les commandes
+    public function commandes()
+    {
+        return $this->hasManyThrough(
+            Commande::class, // La table finale qu’on veut récupérer
+            Product::class,  // La table intermédiaire
+            'shop_id',       // clé étrangère sur Product qui pointe vers Shop
+            'orderable_id',  // clé étrangère sur Commande qui pointe vers Product (morph)
+            'id',            // clé locale sur Shop
+            'id'             // clé locale sur Product
+        )->where('orderable_type', Product::class);
+    }
+
     // public function isComplete(): bool
     // {
     //     $importantFields = [
