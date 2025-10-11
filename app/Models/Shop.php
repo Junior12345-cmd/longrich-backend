@@ -4,14 +4,40 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Shop extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id','title','description','logo','banner','adresse','mail', 'phone','category','paymentOnDelivery','salesTax','template',
-        'option','status','solde','title_principal_shop','text_description_shop','text_bouton_shop','lien_shop','theme','seo_meta','views_count'
+        'user_id',
+        'title',
+        'description',
+        'logo',
+        'banner',
+        'adresse',
+        'mail',
+        'option',
+        'phone',
+        'category',
+        'status',
+        'solde',
+        'title_principal_shop',
+        'text_description_shop',
+        'text_bouton_shop',
+        'lien_shop',
+        'theme',
+        'seo_meta',
+        'template',
+        'views_count',
+        'paymentOnDelivery',
+        'salesTax',
+    ];
+
+    protected $casts = [
+        'solde' => 'decimal:2',
+        'views_count' => 'integer',
     ];
 
     public function user()
@@ -37,6 +63,19 @@ class Shop extends Model
         )->where('orderable_type', Product::class);
     }
 
+    // Génération automatique du UUID avant la création
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
     // public function isComplete(): bool
     // {
     //     $importantFields = [

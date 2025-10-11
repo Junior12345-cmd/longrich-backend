@@ -87,17 +87,16 @@ class ProductController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                // Générer un nom unique pour éviter les collisions
-                $filename = time() . '_' . $file->getClientOriginalName();
-        
-                // Déplacer directement dans public/products
+                $originalName = $file->getClientOriginalName();
+                $cleanName = preg_replace('/[^A-Za-z0-9_\.-]/', '_', $originalName);
+                $filename = time() . '_' . $cleanName;
+            
                 $file->move(public_path('products'), $filename);
-        
-                // Générer l'URL publique
-                $images[] = asset('public/products/' . $filename);
-            }
-        }        
-
+            
+                $images[] = asset('products/' . $filename);
+            }            
+        }   
+         
         // La première image devient l’image principale
         $data['image'] = $images[0] ?? null;
 

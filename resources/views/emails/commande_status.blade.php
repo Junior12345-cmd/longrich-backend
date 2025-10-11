@@ -1,7 +1,7 @@
 <x-mail::message>
 @if($isAdmin)
 # Bonjour,
-Vous avez reçu une commande **#{{ $commande->id }}** sur **{{ $shop->title ?? config('app.name') }}**.
+Vous avez reçu une commande **#{{ $commande->reference }}** sur **{{ $shop->title ?? config('app.name') }}**.
 
 <x-mail::panel>
 **Statut actuel :** 
@@ -29,7 +29,7 @@ Merci de traiter cette commande rapidement.
 @else
 # Bonjour {{ json_decode($commande->customer, true)['name'] ?? '' }},
 
-Votre commande **#{{ $commande->id }}** sur **{{ $shop->title ?? config('app.name') }}** a été mise à jour.
+Votre commande **#{{ $commande->reference }}** sur **{{ $shop->title ?? config('app.name') }}** a été mise à jour.
 
 <x-mail::panel>
 **Statut actuel :** 

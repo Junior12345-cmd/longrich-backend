@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Product;
 use App\Models\Commande;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -60,28 +61,59 @@ class CommandeController extends Controller
             'customer.country' => 'required|string|max:255',
             'customer.geolocation' => 'nullable|url',
             'product_id' => 'required|exists:products,id',
-            'amount' => 'required|numeric',
+            'amount' => 'required',
             'quantity' => 'required|integer|min:1',
             'transaction_id' => 'nullable|string',
             'status' => 'required|in:pending,completed,canceled',
+        ], [
+            // Messages de validation
+            'required' => 'Le champ :attribute est requis.',
+            'string' => 'Le champ :attribute doit être une chaîne de caractères.',
+            'max' => 'Le champ :attribute ne peut pas dépasser :max caractères.',
+            'numeric' => 'Le champ :attribute doit être un nombre.',
+            'integer' => 'Le champ :attribute doit être un entier.',
+            'min' => 'Le champ :attribute doit être au moins :min.',
+            'exists' => 'Le :attribute sélectionné est invalide.',
+            'in' => 'Le :attribute sélectionné est invalide.',
+            'email' => "Le champ :attribute doit être une adresse e-mail valide.",
+            'url' => "Le champ :attribute doit être une URL valide."
         ]);
-
+        
+        // Définir des noms lisibles pour chaque champ
+        $validator->setAttributeNames([
+            'customer.name' => 'Nom',
+            'customer.email' => 'Email',
+            'customer.phone' => 'Téléphone',
+            'customer.address' => 'Adresse',
+            'customer.neighborhood' => 'Quartier',
+            'customer.city' => 'Ville',
+            'customer.country' => 'Pays',
+            'customer.geolocation' => 'Géolocalisation',
+            'product_id' => 'Produit',
+            'amount' => 'Montant',
+            'quantity' => 'Quantité',
+            'transaction_id' => 'ID de transaction',
+            'status' => 'Statut de la commande',
+        ]);
+        
+        // Vérifier les erreurs
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }        
 
         $data = $validator->validated();
 
         // Générer la référence CMD001, CMD002...
-        $nextId = (Commande::max('id') ?? 0) + 1;
-        $reference = 'CMD' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-        
+        $reference = 'CMD' . date('YmdHis') . strtoupper(Str::random(4));
+
         $product = Product::find($data['product_id']);
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Produit introuvable'], 404);
         }
         
-        $newQuantity = $product->quantity - $data['quantity'];
+        $newQuantity = ((int) $product->quantity) - $data['quantity'];
         if ($newQuantity < 0) {
             return response()->json(['success' => false, 'message' => 'Quantité insuffisante en stock'], 400);
         }
@@ -91,10 +123,10 @@ class CommandeController extends Controller
 
         // Créer la commande
         $commande = Commande::create([
-            'customer' => json_encode($data['customer']),
+            'customer' => json_encode($data['customer'], JSON_UNESCAPED_UNICODE),
             'orderable_id' => $data['product_id'],
             'orderable_type' => 'App\Models\Product',
-            'amount' => $data['amount'],
+            'amount' => (float) $data['amount'],
             'quantity' => $data['quantity'],
             'transaction_id' => $data['transaction_id'] ?? null,
             'status' => $data['status'],

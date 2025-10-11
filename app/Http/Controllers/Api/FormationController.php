@@ -12,7 +12,7 @@ class FormationController extends Controller
     // Lister toutes les formations avec leurs chapitres
     public function index()
     {
-        $formations = Formation::with('chapitres')->get();
+        $formations = Formation::with('chapitres')->latest()->get();
         return response()->json($formations);
     }
 
@@ -23,6 +23,7 @@ class FormationController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'price'       => 'required|numeric',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'format'      => 'required|string',
         ]);
 
@@ -37,11 +38,24 @@ class FormationController extends Controller
         $data['user_id'] = auth()->id();
         $data['status']  = 'draft';
 
+         // 📸 Gestion de l’image (stockée dans public/formations/)
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $request->file('image')->move(public_path('formations'), $imageName);
+            $data['image'] = 'formations/' . $imageName; 
+        }
+
+
         // Création de la formation
         $formation = Formation::create($data);
 
-        return response()->json($formation, 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Formation créée avec succès',
+            'formation' => $formation
+        ], 201);  
     }
+    
 
 
     // Afficher une formation spécifique
@@ -69,7 +83,6 @@ class FormationController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric',
-            'format' => 'sometimes|required|string',
         ]);
 
         if ($validator->fails()) {

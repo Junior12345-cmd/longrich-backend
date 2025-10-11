@@ -1,6 +1,8 @@
 <?php
 
 use Laravel\Sanctum\Sanctum;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return [
 
@@ -22,6 +24,8 @@ return [
     //     env('FRONTEND_URL') ? ','.parse_url(env('FRONTEND_URL'), PHP_URL_HOST) : ''
     // ))),
     'stateful' => [],
+
+    
 
     /*
     |--------------------------------------------------------------------------

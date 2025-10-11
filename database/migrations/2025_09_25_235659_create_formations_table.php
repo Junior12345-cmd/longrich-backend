@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('formations', function (Blueprint $table) {
-            $table->id();
-            $table->string('user_id')->constrained('users')->onDelete('cascade');;
+            $table->uuid('id')->primary();
+            $table->uuid('user_id')->constrained('users')->onDelete('cascade');;
             $table->string('title');
             $table->text('description')->nullable();
+            $table->text('image')->nullable();
             $table->decimal('price', 10, 2);
             $table->string('format'); // ex: video, pdf, en ligne
             $table->string('status'); // ex: draft, published, archived

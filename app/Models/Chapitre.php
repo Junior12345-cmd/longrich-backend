@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Chapitre extends Model
 {
@@ -11,6 +12,7 @@ class Chapitre extends Model
         'lien',
         'ressources',
         'formation_id',
+        'description'
     ];
 
     // Relation avec la formation
@@ -23,4 +25,19 @@ class Chapitre extends Model
     protected $casts = [
         'ressources' => 'array',
     ];
+
+    // Génération automatique du UUID avant la création
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = (string) Str::uuid(); // UUID
+            }
+        });
+    }
+
+    public $incrementing = false;
+    protected $keyType = 'string';
 }

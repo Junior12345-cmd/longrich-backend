@@ -73,7 +73,8 @@ class ChapitreController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title'        => 'sometimes|required|string|max:255',
-            'lien'         => 'nullable|url',
+            'description'        => 'sometimes|required|string',
+            'lien'         => 'url',
             'ressources'   => 'nullable|string',
             'formation_id' => 'sometimes|required|exists:formations,id',
         ]);

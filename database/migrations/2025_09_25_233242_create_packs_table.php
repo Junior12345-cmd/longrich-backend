@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('packs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('country_id')->constrained('countries')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('country_id')->constrained('countries')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
             $table->integer('price');

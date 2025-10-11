@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo; 
+use Illuminate\Support\Str;
 
 class Commande extends Model
 {
@@ -34,4 +35,19 @@ class Commande extends Model
     // {
     //     return $this->belongsTo(User::class, 'customer_id');
     // }
+
+    // Génération automatique du UUID avant la création
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = (string) Str::uuid(); // UUID
+            }
+        });
+    }
+
+    public $incrementing = false;
+    protected $keyType = 'string';
 }

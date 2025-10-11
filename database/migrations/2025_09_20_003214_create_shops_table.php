@@ -13,8 +13,8 @@ return new class extends Migration
     {
 
         Schema::create('shops', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // FK vers users
+            $table->uuid('id')->primary();
+            $table->uuid('user_id')->constrained()->onDelete('cascade'); // FK vers users
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
@@ -35,6 +35,8 @@ return new class extends Migration
             $table->text('seo_meta')->nullable();
             $table->text('template')->nullable();
             $table->integer('views_count')->default(0);
+            $table->string('paymentOnDelivery')->default(false);
+            $table->string('salesTax')->default(false);
             $table->timestamps();
         });
     }

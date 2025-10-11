@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('countries', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title'); // Nom du pays
             $table->string('currency_code', 10); // Code devise (USD, XOF, EUR…)
             $table->string('phone_prefix', 10);  // Indicatif (+221, +225…)

@@ -60,7 +60,7 @@ class ShopController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string',
             'address' => 'required|string|max:500',
             'email' => 'required|email|max:255',
             'phone' => ['required', 'regex:/^\+?\d{8,15}$/'],
@@ -81,20 +81,12 @@ class ShopController extends Controller
         }
 
         if ($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            
-            // Déplace directement dans public/storage/logos
-            // $file->move(public_path('storage/logos'), $filename);
-        
-            // $logo_url = url('storage/logos/' . $filename);
-
-            // Déplacer directement dans public/products
-            $file->move(public_path('logos'), $filename);
-    
-            // Générer l'URL publique
-            $images[] = asset('public/logos/' . $filename);
-        }        
+            $originalName = $request->file('logo')->getClientOriginalName();
+            $cleanName = preg_replace('/[^A-Za-z0-9_\.-]/', '_', $originalName);
+            $imageName = time() . '_' . $cleanName;
+            $request->file('logo')->move(public_path('logos'), $imageName);
+            $data['logo'] = 'logos/' . $imageName; 
+        }     
 
 
         // Générer un slug à partir du title
@@ -113,7 +105,7 @@ class ShopController extends Controller
             'salesTax' => $request->salesTax,
             // 'is_active' => $request->isActive,
             'template' => $request->template,
-            'logo' => $logo_url ?? null,
+            'logo' => $data['logo'] ?? null,
             'status' => 'incomplete',
             'solde' => 0,
             'lien_shop' => $slug,
